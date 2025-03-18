@@ -1,6 +1,6 @@
-// src/parser.rs
 use clap::{Arg, Command, value_parser};
 use serde::{Deserialize, Serialize};
+use std::io::{stdin, stdout, Write};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -14,55 +14,39 @@ pub fn parse_args() -> Config {
     // Print ASCII art welcome text:
     println!(
         r#"
-  ____                            _         ____ _     ___ 
- |  _ \ ___  ___ ___  _ __   ___ | |_ ___  / ___| |   |_ _|
- | |_) / _ \/ __/ _ \| '_ \ / _ \| __/ _ \| |   | |    | | 
- |  _ <  __/ (_| (_) | |_) | (_) | ||  __/| |___| |___ | | 
- |_| \_\___|\___\___/| .__/ \___/ \__\___| \____|_____|___|
-                     |_|                                   
+ _______  _______  _        _______  _______ _________ _______  ______  
+(  ____ \(  ___  )( \      (  ___  )(  ____ )\__   __/(  ____ \(  __  \ 
+| (    \/| (   ) || (      | (   ) || (    )|   ) (   | (    \/| (  \  )
+| (_____ | (___) || |      | (___) || (____)|   | |   | (__    | |   ) |
+(_____  )|  ___  || |      |  ___  ||     __)   | |   |  __)   | |   | |
+      ) || (   ) || |      | (   ) || (\ (      | |   | (      | |   ) |
+/\____) || )   ( || (____/\| )   ( || ) \ \_____) (___| (____/\| (__/  )
+\_______)|/     \|(_______/|/     \||/   \__/\_______/(_______/(______/                             
 Welcome to the Ecommerce Website CLI Configurator!
 "#
     );
 
-    let matches = Command::new("Ecommerce CLI Configurator")
-        .version("0.1.0")
-        .author("Your Name <you@example.com>")
-        .about("Configures an ecommerce website")
-        .arg(
-            Arg::new("company")
-                .short('n')
-                .long("company")
-                .value_name("COMPANY_NAME")
-                .help("Sets the company name")
-                .required(true)
-                .num_args(1)
-                .value_parser(value_parser!(String)),
-        )
-        .arg(
-            Arg::new("address")
-                .short('a')
-                .long("address")
-                .value_name("ADDRESS_BANNER")
-                .help("Sets the address and banner text")
-                .required(true)
-                .num_args(1)
-                .value_parser(value_parser!(String)),
-        )
-        .arg(
-            Arg::new("categories")
-                .short('c')
-                .long("categories")
-                .value_name("PRODUCT_CATEGORIES")
-                .help("Comma-separated list of product categories")
-                .required(true)
-                .num_args(1)
-                .value_parser(value_parser!(String)),
-        )
-        .get_matches();
+    // Prompt for company name
+    print!("Enter company name: ");
+    stdout().flush().unwrap();
+    let mut company_name = String::new();
+    stdin().read_line(&mut company_name).unwrap();
+    company_name = company_name.trim().to_string();
 
-    let company_name = matches.get_one::<String>("company").unwrap().to_string();
-    let address_banner = matches.get_one::<String>("address").unwrap().to_string();
-    let categories_str = matches.get_one::<String>("categories").unwrap();
+    // Prompt for address banner
+    print!("Enter address banner: ");
+    stdout().flush().unwrap();
+    let mut address_banner = String::new();
+    stdin().read_line(&mut address_banner).unwrap();
+    address_banner = address_banner.trim().to_string();
+
+    // Prompt for product categories
+    print!("Enter product categories (comma-separated): ");
+    stdout().flush().unwrap();
+    let mut categories_str = String::new();
+    stdin().read_line(&mut categories_str).unwrap();
+    categories_str = categories_str.trim().to_string();
+
     let product_categories: Vec<String> = categories_str
         .split(',')
         .map(|s| s.trim().to_string())

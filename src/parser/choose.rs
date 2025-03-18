@@ -1,8 +1,9 @@
 // src/choose.rs
-use dialoguer::Input;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
+use rfd;
+
 /// Stores the selected files.
 pub struct FileChoices {
     pub banner_file: String,
@@ -10,32 +11,116 @@ pub struct FileChoices {
 }
 
 /// Prompts the user to choose a banner file and, for each product category,
-/// asks for three image files.
+/// asks for three image files using a system file dialog.
 pub fn choose_files(categories: &[String]) -> FileChoices {
-    // Ask for the banner poster file:
-    let banner_file: String = Input::new()
-        .with_prompt("Choose your banner poster file (enter file path)")
-        .interact_text()
-        .unwrap();
+    let banner_file: String;
+    #[cfg(target_os = "windows")]
+    {
+        if let Some(path) = rfd::FileDialog::new()
+            .add_filter("Image Files", &["png", "jpg", "jpeg"])
+            .set_title("Choose your banner poster file")
+            .pick_file()
+        {
+            banner_file = path.display().to_string();
+        } else {
+            eprintln!("No banner file selected. Exiting.");
+            std::process::exit(1);
+        }
+    }
+    #[cfg(target_os = "linux")]
+    {
+        if let Some(path) = rfd::FileDialog::new()
+            .add_filter("Image Files", &["png", "jpg", "jpeg"])
+            .set_title("Choose your banner poster file")
+            .pick_file()
+        {
+            banner_file = path.display().to_string();
+        } else {
+            eprintln!("No banner file selected. Exiting.");
+            std::process::exit(1);
+        }
+    }
+    #[cfg(target_os = "macos")]
+    {
+        if let Some(path) = rfd::FileDialog::new()
+            .add_filter("Image Files", &["png", "jpg", "jpeg"])
+            .set_title("Choose your banner poster file")
+            .pick_file()
+        {
+            banner_file = path.display().to_string();
+        } else {
+            eprintln!("No banner file selected. Exiting.");
+            std::process::exit(1);
+        }
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
+    {
+        // Fallback for other operating systems (can be improved with other libraries or simple input)
+        use dialoguer::Input;
+        banner_file = Input::new()
+            .with_prompt("Choose your banner poster file (enter file path)")
+            .interact_text()
+            .unwrap();
+    }
 
     let mut category_images = HashMap::new();
     // For each category, ask for 3 image sources:
     for category in categories {
         println!("\nFor category '{}':", category);
-        let img1: String = Input::new()
-            .with_prompt(format!("Choose image 1 for '{}'", category))
-            .interact_text()
-            .unwrap();
-        let img2: String = Input::new()
-            .with_prompt(format!("Choose image 2 for '{}'", category))
-            .interact_text()
-            .unwrap();
-        let img3: String = Input::new()
-            .with_prompt(format!("Choose image 3 for '{}'", category))
-            .interact_text()
-            .unwrap();
-
-        category_images.insert(category.clone(), [img1, img2, img3]);
+        let mut images: [String; 3] = Default::default();
+        for i in 0..3 {
+            let prompt = format!("Choose image {} for '{}'", i + 1, category);
+            let file_path: String;
+            #[cfg(target_os = "windows")]
+            {
+                if let Some(path) = rfd::FileDialog::new()
+                    .add_filter("Image Files", &["png", "jpg", "jpeg"])
+                    .set_title(&prompt)
+                    .pick_file()
+                {
+                    file_path = path.display().to_string();
+                } else {
+                    eprintln!("No image selected for '{}'. Exiting.", category);
+                    std::process::exit(1);
+                }
+            }
+            #[cfg(target_os = "linux")]
+            {
+                if let Some(path) = rfd::FileDialog::new()
+                    .add_filter("Image Files", &["png", "jpg", "jpeg"])
+                    .set_title(&prompt)
+                    .pick_file()
+                {
+                    file_path = path.display().to_string();
+                } else {
+                    eprintln!("No image selected for '{}'. Exiting.", category);
+                    std::process::exit(1);
+                }
+            }
+            #[cfg(target_os = "macos")]
+            {
+                if let Some(path) = rfd::FileDialog::new()
+                    .add_filter("Image Files", &["png", "jpg", "jpeg"])
+                    .set_title(&prompt)
+                    .pick_file()
+                {
+                    file_path = path.display().to_string();
+                } else {
+                    eprintln!("No image selected for '{}'. Exiting.", category);
+                    std::process::exit(1);
+                }
+            }
+            #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
+            {
+                use dialoguer::Input;
+                file_path = Input::new()
+                    .with_prompt(&prompt)
+                    .interact_text()
+                    .unwrap();
+            }
+            images[i] = file_path;
+        }
+        category_images.insert(category.clone(), images);
     }
 
     FileChoices {
